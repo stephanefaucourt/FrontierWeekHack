@@ -10,7 +10,7 @@ In this lab, you’ll build, monitor, evaluate, and orchestrate AI agents using 
  
 By the end, you won’t just understand how agents work — you’ll have built one you can trace, evaluate, and deploy.
 
-All challenge instructions are also available at [microsoft.github.io/agenticaihack](https://microsoft.github.io/agenticaihack/).
+All challenge instructions are also available at [microsoft.github.io/FrontierWeekHack](https://microsoft.github.io/FrontierWeekHack/).
 
 ## What You'll Learn
 
