@@ -2,9 +2,13 @@
 
 ## Scenario
 
+![scenario](./images/scenario.png)
+
 You work at **ClaimSight Insurance**, a property and auto insurance company that processes hundreds of claims daily. Each claim has associated metrics: document completeness, damage-vs-estimate consistency, fraud risk scoring, and policy coverage matching. Lately, fraudulent claims and processing delays have been costing the company millions.
 
 Your mission: **Build AI agents using Microsoft Foundry** that can triage incoming claims and make intelligent processing decisions — flagging suspicious claims for investigation while fast-tracking legitimate ones.
+
+![orchestration](./images/agentic-orchestration.png)
 
 You'll build two agents:
 
@@ -56,36 +60,7 @@ All challenges are Python SDK-based. Challenge 4 also walks you through the Foun
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────┐
-│                  Microsoft Foundry                     │
-│  ┌──────────────────┐    ┌──────────────────────────┐│
-│  │ Claims Triage    │    │ Claims Decision Agent    ││
-│  │ Agent            │    │ (persistent v1)          ││
-│  │ (persistent v1)  │    │                          ││
-│  │                  │    │ Recommends: APPROVE /    ││
-│  │ Tools:           │    │ INVESTIGATE / REQUEST /  ││
-│  │ - assess_claim   │    │ DENY                    ││
-│  └──────────────────┘    └──────────────────────────┘│
-│                                                      │
-│  ┌─────────────────────────────────────────────────┐ │
-│  │ Application Insights (GenAI Tracing)            │ │
-│  │ Traces every agent call, tool invocation,       │ │
-│  │ token usage, and latency                        │ │
-│  └─────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────┘
-         ▲                           ▲
-         │                           │
-    assess_claim()            Decision input
-    (local tool)              (from triage flags)
-         │                           │
-┌────────┴───────────────────────────┴─────────────────┐
-│              Python Orchestration (deploy.py)         │
-│  1. Triage all claims                                │
-│  2. For each flagged claim → get decision            │
-│  3. Print consolidated claims report                 │
-└──────────────────────────────────────────────────────┘
-```
+![architecture](./images/architecture.png)
 
 
 ## Next Steps

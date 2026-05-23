@@ -31,7 +31,10 @@
             ],
             "settings": {
                 "workbench.colorTheme": "GitHub Dark Default",
-                "python.defaultInterpreterPath": "/usr/local/bin/python"
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "workbench.editorAssociations": {
+                    "*.md": "vscode.markdown.preview.editor"
+                }
             }
         }
     }
