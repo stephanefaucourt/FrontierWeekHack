@@ -19,6 +19,27 @@ MODEL_VERSION="${MODEL_VERSION:-2026-03-05}"
 LOG_ANALYTICS_NAME="${LOG_ANALYTICS_NAME:-foundry-hack-logs-$SUFFIX}"
 APP_INSIGHTS_NAME="${APP_INSIGHTS_NAME:-foundry-hack-insights-$SUFFIX}"
 
+# --- Argument parsing --------------------------------------------------------
+# Resource tags always include the default below. Provide additional tags with:
+#   deploy.sh --tags 'MyTag=MyValue' 'Owner=Jane'
+TAGS=("environment=hack")
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --tags)
+            shift
+            while [[ $# -gt 0 && "$1" != --* ]]; do
+                TAGS+=("$1")
+                shift
+            done
+            ;;
+        *)
+            echo "Unknown argument: $1" >&2
+            echo "Usage: deploy.sh [--tags 'Key=Value' ...]" >&2
+            exit 1
+            ;;
+    esac
+done
+
 echo "=============================================="
 echo "  Foundry Hackathon — Infrastructure Deploy"
 echo "=============================================="
@@ -31,6 +52,7 @@ echo "Project:           $PROJECT_NAME"
 echo "Model Deployment:  $MODEL_DEPLOYMENT_NAME"
 echo "Model Name:        $MODEL_NAME"
 echo "Model Version:     $MODEL_VERSION"
+echo "Tags:              ${TAGS[*]}"
 echo ""
 
 # --- Resource Group ----------------------------------------------------------
@@ -38,15 +60,16 @@ echo ">>> Creating resource group..."
 az group create \
     --name "$RESOURCE_GROUP" \
     --location "$LOCATION" \
-    --output none
+    --output none \
+    --tags "${TAGS[@]}"
 
 # --- AI Foundry Hub ----------------------------------------------------------
-echo ">>> Creating AI Foundry resource (AIServices)..."
+echo ">>> Creating Microsoft Foundry Account resource (AIServices)..."
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 az rest \
     --method PUT \
     --url "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/$FOUNDRY_RESOURCE_NAME?api-version=2024-10-01" \
-    --body "{\"kind\": \"AIServices\", \"sku\": {\"name\": \"S0\"}, \"location\": \"$LOCATION\", \"properties\": {\"customSubDomainName\": \"$FOUNDRY_RESOURCE_NAME\", \"publicNetworkAccess\": \"Enabled\", \"allowProjectManagement\": true}}" \
+    --body "{\"kind\": \"AIServices\", \"sku\": {\"name\": \"S0\"}, \"location\": \"$LOCATION\", \"identity\": {\"type\": \"SystemAssigned\"}, \"properties\": {\"customSubDomainName\": \"$FOUNDRY_RESOURCE_NAME\", \"publicNetworkAccess\": \"Enabled\", \"allowProjectManagement\": true}}" \
     --output none || true
 
 echo ">>> Waiting for AIServices resource to reach Succeeded state..."
@@ -92,7 +115,7 @@ if [ "$DISABLE_LOCAL_AUTH" = "true" ]; then
     echo "   The deployment will continue — use DefaultAzureCredential (Entra ID) in your code."
 fi
 
-echo ">>> Creating AI Foundry project..."
+echo ">>> Creating Microsoft Foundry project..."
 az cognitiveservices account project create \
     --name "$FOUNDRY_RESOURCE_NAME" \
     --resource-group "$RESOURCE_GROUP" \
@@ -150,13 +173,23 @@ APP_INSIGHTS_RESOURCE_ID=$(az monitor app-insights component show \
     --resource-group "$RESOURCE_GROUP" \
     --query id -o tsv)
 
-# --- Connect App Insights to the Foundry project ----------------------------
-echo ">>> Connecting Application Insights to Foundry project..."
-az rest \
-    --method PATCH \
-    --url "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/$FOUNDRY_RESOURCE_NAME/projects/$PROJECT_NAME?api-version=2024-10-01" \
-    --body "{\"properties\": {\"applicationInsights\": \"$APP_INSIGHTS_RESOURCE_ID\"}}" \
-    --output none || true ------------------------------------------------
+# --- Connect App Insights to the Foundry account ----------------------------
+# In the new Foundry, monitoring resources surface as "connection" child
+# resources (visible under Management center > Connected resources), not as a
+# project property. The connection uses ApiKey auth (the App Insights
+# connection string); the platform stores that key using the account's
+# system-assigned managed identity, which is why the identity is enabled above.
+echo ">>> Connecting Application Insights to Foundry account..."
+if ! az rest \
+    --method PUT \
+    --url "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/$FOUNDRY_RESOURCE_NAME/connections/appinsights-conn?api-version=2025-06-01" \
+    --body "{\"properties\": {\"category\": \"AppInsights\", \"target\": \"$APP_INSIGHTS_RESOURCE_ID\", \"authType\": \"ApiKey\", \"credentials\": {\"key\": \"$APP_INSIGHTS_CONN_STRING\"}, \"isSharedToAll\": true, \"metadata\": {\"ApiType\": \"Azure\", \"ResourceId\": \"$APP_INSIGHTS_RESOURCE_ID\"}}}" \
+    --output none; then
+    echo "⚠️  Could not link Application Insights to the account automatically."
+    echo "   Tracing (Challenge 2) can still be configured later from the Foundry portal."
+fi
+
+# --- Retrieve endpoint and connection details -------------------------------
 echo ">>> Retrieving Foundry endpoint and keys..."
 FOUNDRY_ENDPOINT=$(az cognitiveservices account show \
     --name "$FOUNDRY_RESOURCE_NAME" \

@@ -15,6 +15,13 @@ By the end of this challenge, you will have:
 
 ## Get Started
 
+> [!NOTE]
+> Before you begin, make sure you have:
+> - An **Azure subscription** where you hold both the **Contributor** role (to deploy the infrastructure) and the **Foundry User** role on the Foundry account (to build, evaluate, and run agents in Challenges 1–4).
+> - A **GitHub handle** (account) to fork this repository and run it in GitHub Codespaces.
+>
+> Subscription **Owner** (or Contributor) rights alone are **not** sufficient. Those grant control-plane access to create and manage resources, but building and running agents are data-plane operations that require the separate **Foundry User** role assigned on the Foundry account. An Owner can self-assign it; a Contributor must ask an admin to assign it after deployment.
+
 There are two ways to get started — pick one:
 
 > **First step for both options:** [Fork this repository](https://github.com/microsoft/FrontierWeekHack/fork) to your own GitHub account.
@@ -27,7 +34,7 @@ No local installs needed. Everything runs in a cloud dev environment.
 
 1. Click the badge above (select your fork if applicable)
 2. Wait for the Codespace to build (~2 min)
-3. In the terminal, login to Azure and deploy your scenario:
+3. In the terminal, log in to Azure:
 
 ```bash
 az login
@@ -53,7 +60,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 # 3. Install Python dependencies
 pip install -r requirements.txt
 
-# 4. Login to Azure
+# 4. Log in to Azure
 az login
 ```
 
@@ -69,8 +76,27 @@ bash challenge-0-setup/deploy.sh
 
 This will provision all resources **and** automatically write your `.env` file to the repository root as `.env`.
 
+## Verify the creation of your resources
+
+Go to the [Azure Portal](https://portal.azure.com/) and find your resource group, which should now contain resources like this (exact names will differ depending on scenario):
+
+![Azure Portal Resources](./images/azure-portal-resources.png)
+
+Go to the [Microsoft Foundry Portal](https://ai.azure.com) and verify that you can access the Foundry project.
+
+![Foundry Project](./images/foundry-project.png)
+
+Select **Build** in the top navigation, then **Models**, and verify that the **gpt-5.4** model is deployed.
+
+![Foundry Model](./images/foundry-model.png)
+
+Select **gpt-5.4**, enter a test message in the model playground, and verify that you get a response.
+
+![Foundry Model Playground](./images/foundry-model-playground.png)
+
+
 ## Success Criteria
 
-- [ ] You can see your AI Foundry project in the Azure Portal
+- [ ] You can see your Microsoft Foundry project in the Azure Portal
 - [ ] A model deployment for gpt-5.4 shows "Succeeded" status
-- [ ] You can send a test message in the Foundry Playground (Portal)
+- [ ] You can send a test message in the Foundry Model Playground
