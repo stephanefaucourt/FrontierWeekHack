@@ -7,6 +7,11 @@ set -euo pipefail
 # Region: swedencentral
 # =============================================================================
 
+# --- Azure CLI extensions ----------------------------------------------------
+# Auto-install required CLI extensions non-interactively (no Y/n prompts).
+az config set extension.use_dynamic_install=yes_without_prompt --only-show-errors >/dev/null 2>&1 || true
+az extension add --name application-insights --only-show-errors >/dev/null 2>&1 || true
+
 # --- Configuration -----------------------------------------------------------
 SUFFIX="${SUFFIX:-$(openssl rand -hex 4)}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-foundry-hackathon-rg-$SUFFIX}"

@@ -97,7 +97,7 @@ NOVATEL CALL CENTER — SHIFT REPORT
 
 ### Step 4: Test the Intent Classification Agent
 
-1. Click **intent-classification-agent** → **Playground**
+1. Click on **Workflows (preview)** and **intent-classification-agent** → **Preview**
 2. Send:
    ```
    Classify CALL-001 and CALL-007. What are their intents and priority levels?

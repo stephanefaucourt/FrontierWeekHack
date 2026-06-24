@@ -76,7 +76,7 @@ Once the script finishes, your traces are live. Explore them in the Azure Portal
 1. Go to [portal.azure.com](https://portal.azure.com) → search for **Application Insights** → open `foundry-hack-insights-<suffix>`
 2. Left sidebar → **Investigate** → **Search**
 
-![Application Insights Search](./images/screen21.png)
+![Application Insights Search](./images/screen22.png)
 
 3. Set the time range to **Last 30 minutes** and click **Search** — you'll see individual trace events
 4. Look for traces where your agents were invoked.
